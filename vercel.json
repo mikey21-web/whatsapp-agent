@@ -1,10 +1,6 @@
 {
-  "version": 2,
-  "framework": "nextjs",
   "buildCommand": "pnpm --filter @diyaa/db prisma:generate && pnpm --filter @diyaa/web build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/apps/web/$1" }
-  ]
+  "framework": "nextjs"
 }

@@ -13,6 +13,9 @@
     "db:deploy": "pnpm --filter @diyaa/db prisma:deploy",
     "db:studio": "pnpm --filter @diyaa/db prisma:studio"
   },
+  "dependencies": {
+    "next": "14.2.5"
+  },
   "devDependencies": {
     "turbo": "^2.0.0",
     "typescript": "^5.4.5",

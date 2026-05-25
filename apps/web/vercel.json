@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @diyaa/db prisma:generate && pnpm --filter @diyaa/web build",
+  "buildCommand": "pnpm --filter @diyaa/db prisma:generate && pnpm --filter @diyaa/web build",
   "outputDirectory": ".next",
-  "installCommand": "echo 'install handled in buildCommand'"
+  "installCommand": "pnpm install --no-frozen-lockfile"
 }
