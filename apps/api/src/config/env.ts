@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3001),
+  PORT: z.coerce.number().int().positive().default(Number(process.env.PORT ?? 3001)),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
   WEBHOOK_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
   API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
 
   DATABASE_URL: z.string().min(1),
-  DIRECT_URL: z.string().min(1),
+  DIRECT_URL: z.string().min(1).default(process.env.DATABASE_URL ?? ''),
   REDIS_URL: z.string().min(1),
 
   // ── Auth ──
