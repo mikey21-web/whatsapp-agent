@@ -1,0 +1,48 @@
+# diyaa.ai production reverse proxy.
+# Replace example.com with your domains.
+
+{
+    # Use Let's Encrypt for automatic certificate issuance.
+    # On-demand TLS allows custom agency domains pointed via CNAME.
+    on_demand_tls {
+        ask http://api:3001/domain/allowed
+        interval 1m
+        burst 10
+    }
+}
+
+# Platform apex (super admin + reseller default)
+api.example.com {
+    reverse_proxy api:3001
+    encode zstd gzip
+    @websockets {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websockets api:3001
+}
+
+app.example.com {
+    reverse_proxy web:3000
+    encode zstd gzip
+}
+
+# Wildcard fallback for white-label custom domains.
+# Caddy resolves the host header, asks the API if the domain is allowed,
+# and provisions a Let's Encrypt cert on the fly.
+:443 {
+    tls {
+        on_demand
+    }
+    @websockets {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websockets api:3001
+    reverse_proxy /api/* api:3001
+    reverse_proxy /auth/* api:3001
+    reverse_proxy /webhooks/* api:3001
+    reverse_proxy /domain/* api:3001
+    reverse_proxy * web:3000
+    encode zstd gzip
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "baseUrl": "./",
+    "paths": {
+      "@diyaa/db": ["../../packages/db/src"],
+      "@diyaa/types": ["../../packages/types/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}

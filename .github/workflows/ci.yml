@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: diyaa
+          POSTGRES_PASSWORD: diyaa
+          POSTGRES_DB: diyaa
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U diyaa"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgresql://diyaa:diyaa@localhost:5432/diyaa?schema=public
+      DIRECT_URL: postgresql://diyaa:diyaa@localhost:5432/diyaa?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: test-access-secret-with-at-least-32-characters
+      JWT_REFRESH_SECRET: test-refresh-secret-with-at-least-32-characters
+      EVOLUTION_API_URL: https://example.com
+      EVOLUTION_API_KEY: test
+      WEBHOOK_PUBLIC_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @diyaa/db prisma:generate
+      - run: pnpm --filter @diyaa/db exec prisma migrate deploy
+      - run: pnpm --filter @diyaa/api build
+      - run: pnpm --filter @diyaa/web build
+      - run: pnpm --filter @diyaa/api test
