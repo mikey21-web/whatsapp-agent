@@ -72,7 +72,7 @@ export class CampaignService {
       await this.queue.add(
         'send',
         { campaignId: id, contactId: r.id },
-        { delay: i * 200, jobId: `camp:${id}:${r.id}` },
+        { delay: i * 200, jobId: `camp-${id}-${r.id}` },
       );
       i++;
     }

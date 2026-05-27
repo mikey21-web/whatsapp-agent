@@ -104,7 +104,7 @@ export class PaymentLinksService {
       data: { lastMessageAt: msg.createdAt },
     });
 
-    await this.outQueue.add('send', { messageId: msg.id }, { jobId: `out:${msg.id}` });
+    await this.outQueue.add('send', { messageId: msg.id }, { jobId: `out-${msg.id}` });
     this.realtime.emitMessageCreated({
       clientId: conv.clientId,
       conversationId: conv.id,

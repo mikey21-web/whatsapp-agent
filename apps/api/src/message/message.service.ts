@@ -58,7 +58,7 @@ export class MessageService {
       conversationId: conv.id,
       message: msg,
     });
-    await this.outbound.add('send', { messageId: msg.id }, { jobId: `out:${msg.id}` });
+    await this.outbound.add('send', { messageId: msg.id }, { jobId: `out-${msg.id}` });
     return msg;
   }
 

@@ -119,7 +119,7 @@ export class Processors implements OnApplicationBootstrap, OnApplicationShutdown
               conversationId,
               message: aiMsg,
             });
-            await this.outQueue.add('send', { messageId: aiMsg.id }, { jobId: `out:${aiMsg.id}` });
+            await this.outQueue.add('send', { messageId: aiMsg.id }, { jobId: `out-${aiMsg.id}` });
           }
         },
         { connection: this.redis },

@@ -142,7 +142,7 @@ export class WebhookService {
     await this.inboundQueue.add(
       'process-inbound',
       { messageId: message.id, conversationId: conversation.id },
-      { jobId: `msg:${message.id}` },
+      { jobId: `msg-${message.id}` },
     );
   }
 

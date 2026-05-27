@@ -114,7 +114,7 @@ export class FlowExecutor {
             content: text,
           },
         });
-        await this.outQueue.add('send', { messageId: msg.id }, { jobId: `out:${msg.id}` });
+        await this.outQueue.add('send', { messageId: msg.id }, { jobId: `out-${msg.id}` });
         return {};
       }
 
