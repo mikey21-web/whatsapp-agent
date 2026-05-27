@@ -22,8 +22,6 @@ WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 COPY --from=deps /repo/.npmrc ./.npmrc
 COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /repo/packages/db/node_modules ./packages/db/node_modules
 COPY . .
 
 # Generate prisma client and build all required workspaces.
