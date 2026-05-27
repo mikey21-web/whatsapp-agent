@@ -44,4 +44,4 @@ COPY --from=build /repo/packages/db/prisma ./prisma
 COPY --from=build /repo/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3001
-CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then echo 'FATAL: DATABASE_URL is not set' >&2; exit 1; fi && prisma migrate deploy --schema=./prisma/schema.prisma && node dist/main.js"]
+CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then echo 'FATAL: DATABASE_URL is not set' >&2; exit 1; fi && prisma migrate deploy --schema=./prisma/schema.prisma && node dist/apps/api/src/main.js"]
