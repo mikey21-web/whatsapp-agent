@@ -44,4 +44,4 @@ COPY --from=build /repo/packages/db/prisma ./prisma
 COPY --from=build /repo/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3001
-CMD ["sh", "-c", "prisma migrate deploy --schema=./prisma/schema.prisma && node dist/main.js"]
+CMD ["sh", "-c", "export DIRECT_URL=\"${DIRECT_URL:-$DATABASE_URL}\" && prisma migrate deploy --schema=./prisma/schema.prisma && node dist/main.js"]
