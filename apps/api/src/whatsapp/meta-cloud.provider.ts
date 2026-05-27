@@ -64,21 +64,28 @@ export class MetaCloudProvider implements WhatsappProviderImpl {
   async sendText(account: ProviderAccount, args: SendTextArgs): Promise<SendResult> {
     if (!account.phoneNumberId) throw new ForbiddenException('phoneNumberId required');
     const token = this.tokenFor(account);
-    const { data } = await axios.post<{ messages: { id: string }[] }>(
-      `${GRAPH_API}/${encodeURIComponent(account.phoneNumberId)}/messages`,
-      {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: args.to,
-        type: 'text',
-        text: { preview_url: false, body: args.text },
-      },
-      {
-        headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-        timeout: 15_000,
-      },
-    );
-    return { waMessageId: data.messages?.[0]?.id ?? null };
+    try {
+      const { data } = await axios.post<{ messages: { id: string }[] }>(
+        `${GRAPH_API}/${encodeURIComponent(account.phoneNumberId)}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: args.to,
+          type: 'text',
+          text: { preview_url: false, body: args.text },
+        },
+        {
+          headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+          timeout: 15_000,
+        },
+      );
+      return { waMessageId: data.messages?.[0]?.id ?? null };
+    } catch (e: any) {
+      this.logger.error(
+        `Meta sendText failed: status=${e?.response?.status} body=${JSON.stringify(e?.response?.data ?? e?.message ?? e)} phoneNumberId=${account.phoneNumberId} to=${args.to}`,
+      );
+      throw e;
+    }
   }
 
   async sendTemplate(account: ProviderAccount, args: SendTemplateArgs): Promise<SendResult> {
