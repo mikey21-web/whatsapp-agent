@@ -6,10 +6,10 @@ import { Processors } from './processors.service';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 import { AiModule } from '../ai/ai.module';
+import { Q_INBOUND, Q_OUTBOUND, Q_CAMPAIGN } from './queue.constants';
 
-export const Q_INBOUND = 'inbound-messages';
-export const Q_OUTBOUND = 'outbound-messages';
-export const Q_CAMPAIGN = 'campaign-broadcasts';
+// Re-export for callers that still import the tokens from this module.
+export { Q_INBOUND, Q_OUTBOUND, Q_CAMPAIGN };
 
 const defaultJobOpts: JobsOptions = {
   attempts: 5,

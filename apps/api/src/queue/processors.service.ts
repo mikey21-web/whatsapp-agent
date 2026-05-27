@@ -8,7 +8,7 @@ import {
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import axios from 'axios';
-import { Q_INBOUND, Q_OUTBOUND, Q_CAMPAIGN } from './queue.module';
+import { Q_INBOUND, Q_OUTBOUND, Q_CAMPAIGN } from './queue.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
