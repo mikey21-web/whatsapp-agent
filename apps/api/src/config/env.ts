@@ -52,6 +52,7 @@ const schema = z.object({
   GROQ_API_KEY: z.string().optional().default(''),
   GROQ_MODEL: z.string().default('llama-3.3-70b-versatile'),
   OPENAI_API_KEY: z.string().optional().default(''),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
   SARVAM_API_KEY: z.string().optional().default(''),
 
