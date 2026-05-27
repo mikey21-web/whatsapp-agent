@@ -50,6 +50,40 @@ export class PlanLimitsService {
     }
   }
 
+  async assertCanAddAgent(clientId: string): Promise<void> {
+    const c = await this.prisma.client.findUnique({
+      where: { id: clientId },
+      select: { agencyId: true },
+    });
+    if (!c) throw new ForbiddenException();
+    const { plan } = await this.getContext(c.agencyId);
+    const limits = PLANS[plan];
+    if (limits.maxAgents === Number.MAX_SAFE_INTEGER) return;
+    const count = await this.prisma.aIAgent.count({ where: { clientId } });
+    if (count >= limits.maxAgents) {
+      throw new ForbiddenException(
+        `Plan ${limits.label} allows ${limits.maxAgents} AI agent(s). Upgrade to add more.`,
+      );
+    }
+  }
+
+  async assertCanAddContact(clientId: string): Promise<void> {
+    const c = await this.prisma.client.findUnique({
+      where: { id: clientId },
+      select: { agencyId: true },
+    });
+    if (!c) throw new ForbiddenException();
+    const { plan } = await this.getContext(c.agencyId);
+    const limits = PLANS[plan];
+    if (limits.maxContacts === Number.MAX_SAFE_INTEGER) return;
+    const count = await this.prisma.contact.count({ where: { clientId } });
+    if (count >= limits.maxContacts) {
+      throw new ForbiddenException(
+        `Plan ${limits.label} allows ${limits.maxContacts.toLocaleString()} contacts. Upgrade to add more.`,
+      );
+    }
+  }
+
   async assertCanSendMessage(agencyId: string): Promise<void> {
     const { plan, periodStart } = await this.getContext(agencyId);
     const limits = PLANS[plan];
@@ -92,9 +126,11 @@ export class PlanLimitsService {
     const usage = await this.prisma.usageRecord.findUnique({
       where: { agencyId_period: { agencyId, period: periodStart } },
     });
-    const [clients, numbers] = await Promise.all([
+    const [clients, numbers, agents, contacts] = await Promise.all([
       this.prisma.client.count({ where: { agencyId } }),
       this.prisma.whatsappAccount.count({ where: { client: { agencyId } } }),
+      this.prisma.aIAgent.count({ where: { client: { agencyId } } }),
+      this.prisma.contact.count({ where: { client: { agencyId } } }),
     ]);
     return {
       plan,
@@ -103,10 +139,14 @@ export class PlanLimitsService {
         clients: limits.maxClients,
         numbersPerClient: limits.maxNumbersPerClient,
         messagesPerMonth: limits.maxMessagesPerMonth,
+        agents: limits.maxAgents,
+        contacts: limits.maxContacts,
       },
       current: {
         clients,
         numbers,
+        agents,
+        contacts,
         messages: usage?.messages ?? 0,
       },
     };

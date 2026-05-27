@@ -138,6 +138,82 @@ export class AuthService {
     return ag;
   }
 
+  /**
+   * Self-serve SMB signup. Creates an Agency wrapper + a paired Client in one
+   * transaction so the user lands directly in the Client dashboard. The agency
+   * is invisible plumbing — same email/password is reused for the Client login.
+   * Returns a fully-authenticated session for the Client (no extra login step).
+   */
+  async signupSmb(
+    dto: { email: string; password: string; businessName: string; phone?: string },
+    meta: LoginMeta,
+  ): Promise<LoginResult> {
+    if (!env.ALLOW_AGENCY_SIGNUP) throw new ForbiddenException('Signup disabled');
+    const email = dto.email.toLowerCase().trim();
+
+    const [agencyEmail, clientEmail] = await Promise.all([
+      this.prisma.agency.findUnique({ where: { email } }),
+      this.prisma.client.findUnique({ where: { email } }),
+    ]);
+    if (agencyEmail || clientEmail) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const slug = await this.uniqueSlug(slugify(dto.businessName) || `b-${Date.now().toString(36)}`);
+    const hash = await bcrypt.hash(dto.password, BCRYPT_COST);
+
+    // Create Agency + Client in a single transaction.
+    const created = await this.prisma.$transaction(async (tx) => {
+      const ag = await tx.agency.create({
+        data: {
+          email,
+          password: hash,
+          name: dto.businessName,
+          slug,
+          plan: 'FREE',
+        },
+      });
+      const client = await tx.client.create({
+        data: {
+          agencyId: ag.id,
+          email,
+          password: hash,
+          name: dto.businessName,
+          businessName: dto.businessName,
+          phone: dto.phone,
+        },
+      });
+      return { agencyId: ag.id, client };
+    });
+
+    // Best-effort verification email — never blocks signup.
+    void this.reset.sendVerifyEmail('CLIENT', created.client.id).catch(() => undefined);
+
+    const principal: Principal = {
+      type: 'CLIENT',
+      id: created.client.id,
+      agencyId: created.agencyId,
+    };
+    return this.finalizeLogin(principal, 'CLIENT', created.client.id, meta);
+  }
+
+  /**
+   * Generates a slug that doesn't collide with existing Agency.slug. Tries the
+   * candidate as-is, then falls back to candidate-2, candidate-3, …
+   */
+  private async uniqueSlug(candidate: string): Promise<string> {
+    let slug = candidate;
+    let n = 2;
+    // Bound the loop to avoid pathological cases.
+    while (n < 50) {
+      const exists = await this.prisma.agency.findUnique({ where: { slug } });
+      if (!exists) return slug;
+      slug = `${candidate}-${n}`;
+      n++;
+    }
+    return `${candidate}-${Date.now().toString(36)}`;
+  }
+
   async refresh(refreshToken: string, meta: LoginMeta): Promise<LoginResult> {
     let rotated;
     try {
@@ -267,3 +343,12 @@ function decodeChallenge(c: string): { type: SubjectType; id: string } | null {
 }
 
 export type { LoginOrChallenge, MfaChallenge };
+
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}

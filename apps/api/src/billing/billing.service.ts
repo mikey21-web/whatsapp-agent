@@ -28,10 +28,24 @@ export class BillingService {
 
   async checkout(plan: AgencyPlan, p: Principal): Promise<{ subscriptionId: string; shortUrl: string | null }> {
     const agencyId = this.requireAgency(p);
+    if (plan === 'FREE') {
+      // FREE has no Razorpay subscription. Cancel any existing paid sub and
+      // mark the agency as on FREE.
+      const sub = await this.prisma.subscription.findUnique({ where: { agencyId } });
+      if (sub?.razorpaySubId) {
+        await this.razorpay.cancelSubscription(sub.razorpaySubId).catch(() => undefined);
+      }
+      await this.prisma.subscription.deleteMany({ where: { agencyId } });
+      await this.prisma.agency.update({ where: { id: agencyId }, data: { plan: 'FREE' } });
+      return { subscriptionId: '', shortUrl: null };
+    }
     if (!this.razorpay.isConfigured()) {
       throw new ForbiddenException('Billing not configured on this deployment');
     }
     const planLimits = PLANS[plan];
+    if (!planLimits.razorpayPlanIdEnvKey) {
+      throw new ForbiddenException(`Plan ${plan} is not purchasable`);
+    }
     const planId = env[planLimits.razorpayPlanIdEnvKey];
     if (!planId) throw new ForbiddenException(`No Razorpay plan configured for ${plan}`);
 
@@ -149,8 +163,13 @@ export class BillingService {
   }
 
   private requireAgency(p: Principal): string {
-    if (p.type !== 'AGENCY') throw new ForbiddenException('Agency context required');
-    return p.id;
+    // For self-served SMBs the user is a CLIENT but they own the whole
+    // Agency wrapper, so resolve through the principal.agencyId. Pure agency
+    // resellers come in with type === 'AGENCY' and we use their id directly.
+    if (p.type === 'AGENCY') return p.id;
+    if (p.type === 'CLIENT' && p.agencyId) return p.agencyId;
+    if (p.type === 'TEAM_MEMBER' && p.agencyId) return p.agencyId;
+    throw new ForbiddenException('Workspace context required');
   }
 }
 

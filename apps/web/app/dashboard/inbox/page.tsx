@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { cn, formatRelative } from '@/lib/utils';
 import type { ConversationDTO, MessageDTO } from '@diyaa/types';
 import { Bot, BotOff, CheckCircle2, Zap, IndianRupee } from 'lucide-react';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 
 interface QuickReply {
   id: string;
@@ -65,20 +66,23 @@ export default function InboxPage() {
   const selected = conversations?.find((c) => c.id === selectedId);
 
   return (
-    <div className="flex h-full">
-      <ConversationList
-        conversations={conversations ?? []}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-      />
-      <div className="flex flex-1 flex-col">
-        {selectedId && selected ? (
-          <ChatWindow conversation={selected} quickReplies={quickReplies ?? []} />
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-muted-foreground">
-            Select a conversation
-          </div>
-        )}
+    <div className="flex h-full flex-col">
+      <OnboardingChecklist />
+      <div className="flex flex-1 overflow-hidden">
+        <ConversationList
+          conversations={conversations ?? []}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
+        <div className="flex flex-1 flex-col">
+          {selectedId && selected ? (
+            <ChatWindow conversation={selected} quickReplies={quickReplies ?? []} />
+          ) : (
+            <div className="flex flex-1 items-center justify-center text-muted-foreground">
+              Select a conversation
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

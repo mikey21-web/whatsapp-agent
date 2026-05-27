@@ -34,7 +34,7 @@ model Agency {
   password        String
   emailVerifiedAt DateTime?
   mfaEnabled      Boolean       @default(false)
-  plan            AgencyPlan    @default(STARTER)
+  plan            AgencyPlan    @default(FREE)
   isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
   clients         Client[]
@@ -444,6 +444,7 @@ model Subscription {
 }
 
 enum AgencyPlan {
+  FREE
   STARTER
   GROWTH
   SCALE

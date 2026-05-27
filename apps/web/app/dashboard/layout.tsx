@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 import {
   MessageSquare, Users, Settings, LogOut, Bot, BookOpen, Briefcase,
-  Workflow, Megaphone, Sparkles, BarChart3, Plug, Zap, Menu, X, FileText,
+  Workflow, Megaphone, Sparkles, BarChart3, Plug, Zap, Menu, X, FileText, CreditCard,
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -67,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <NavLink href="/dashboard/integrations" icon={<Plug size={16} />} label="Integrations" onNav={() => setMobileOpen(false)} />
           <NavLink href="/dashboard/quick-replies" icon={<Zap size={16} />} label="Quick Replies" onNav={() => setMobileOpen(false)} />
           <NavLink href="/dashboard/templates" icon={<Sparkles size={16} />} label="Templates" onNav={() => setMobileOpen(false)} />
+          <NavLink href="/dashboard/billing" icon={<CreditCard size={16} />} label="Plan &amp; billing" onNav={() => setMobileOpen(false)} />
           <NavLink href="/dashboard/settings" icon={<Settings size={16} />} label="Settings" onNav={() => setMobileOpen(false)} />
         </nav>
         <button

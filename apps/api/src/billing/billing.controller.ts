@@ -6,15 +6,44 @@ import { BillingService } from './billing.service';
 import { RazorpayClient } from './razorpay.client';
 import type { Principal } from '../auth/principal';
 import type { AgencyPlan } from '@diyaa/db';
+import { PLANS, PLAN_ORDER } from './plans';
 
-const PLANS = ['STARTER', 'GROWTH', 'SCALE'] as const;
+const PLAN_IDS = ['FREE', 'STARTER', 'GROWTH', 'SCALE'] as const;
 
 class CheckoutDto {
-  @IsIn(PLANS as unknown as string[]) plan!: AgencyPlan;
+  @IsIn(PLAN_IDS as unknown as string[]) plan!: AgencyPlan;
+}
+
+/**
+ * Public marketing endpoint. Returns the plan catalog so the pricing page
+ * can render without hard-coding values in the frontend. Safe to expose:
+ * no secrets, just labels, prices, and limits already shown to users.
+ */
+@Controller('plans')
+export class PlansController {
+  @Public()
+  @Get()
+  list() {
+    return PLAN_ORDER.map((id) => {
+      const p = PLANS[id];
+      return {
+        id,
+        label: p.label,
+        priceInr: p.priceInr,
+        highlights: p.highlights,
+        limits: {
+          messagesPerMonth: p.maxMessagesPerMonth,
+          contacts: p.maxContacts,
+          agents: p.maxAgents,
+          numbers: p.maxNumbersPerClient,
+        },
+      };
+    });
+  }
 }
 
 @Controller('billing')
-@Roles('AGENCY')
+@Roles('AGENCY', 'CLIENT')
 export class BillingController {
   constructor(
     private readonly svc: BillingService,

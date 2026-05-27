@@ -27,3 +27,20 @@ export class AgencyRegisterDto {
   @IsString()
   brandColor?: string;
 }
+
+export class SmbSignupDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @IsString()
+  @MinLength(2)
+  businessName!: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+}

@@ -3,7 +3,7 @@ import { IsBoolean, IsEmail, IsString, MinLength } from 'class-validator';
 import type { Request, Response } from 'express';
 import { AuthService, LoginOrChallenge } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
-import { AgencyRegisterDto, LoginDto } from './auth.dto';
+import { AgencyRegisterDto, LoginDto, SmbSignupDto } from './auth.dto';
 import { CurrentPrincipal, Public } from '../common/decorators';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import type { Principal } from './principal';
@@ -46,6 +46,18 @@ export class AuthController {
 
   @Public() @RateLimit({ windowSec: 60, max: 5 }) @Post('agency/register')
   async agencyRegister(@Body() dto: AgencyRegisterDto) { return this.auth.registerAgency(dto); }
+
+  /**
+   * Self-serve SMB signup. Public, rate-limited. Creates an Agency wrapper +
+   * a paired Client and returns a fully-authenticated Client session — the
+   * frontend should set the access token and route to /dashboard.
+   */
+  @Public() @RateLimit({ windowSec: 60, max: 5 }) @Post('signup')
+  async signup(@Body() dto: SmbSignupDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const r = await this.auth.signupSmb(dto, meta(req));
+    setRefreshCookie(res, r.refreshToken, r.refreshExpiresAt);
+    return body(r);
+  }
 
   @Public() @RateLimit({ windowSec: 60, max: 10 }) @Post('agency/login')
   async agencyLogin(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
