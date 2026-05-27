@@ -24,10 +24,19 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache openssl
+
+# Copy the built API
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/apps/api/package.json ./package.json
+
+# Copy ALL node_modules from the build stage (includes prisma, ioredis, etc.)
 COPY --from=build /repo/node_modules ./node_modules
-COPY --from=build /repo/packages ./packages
-COPY --from=build /repo/apps/api/node_modules ./apps/api/node_modules
+
+# Copy prisma schema for migrations
+COPY --from=build /repo/packages/db/prisma ./prisma
+
+# Copy the generated prisma client
+COPY --from=build /repo/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma ./node_modules/.prisma
+
 EXPOSE 3001
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=packages/db/prisma/schema.prisma && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/main.js"]
